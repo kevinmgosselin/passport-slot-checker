@@ -1,0 +1,38 @@
+name: Check Passport Slot Availability
+
+on:
+  schedule:
+    # Runs every 15 minutes
+    # Note: GitHub Actions schedules have ~1-5 min of jitter and
+    # may be delayed during high-load periods.
+    - cron: "*/15 * * * *"
+
+  # Allow manual trigger from the GitHub Actions UI (useful for testing)
+  workflow_dispatch:
+
+jobs:
+  check-slots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run slot checker
+        env:
+          GMAIL_USER:   ${{ secrets.GMAIL_USER }}
+          GMAIL_PASS:   ${{ secrets.GMAIL_PASS }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: python check_slots.py
